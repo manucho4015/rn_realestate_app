@@ -1,6 +1,6 @@
 import * as linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import { Account, Avatars, Client, Databases, OAuthProvider, } from 'react-native-appwrite';
+import { Account, Avatars, Client, OAuthProvider, Query, TablesDB, } from 'react-native-appwrite';
 
 export const config = {
     platform: 'com.manucho.restate',
@@ -19,7 +19,7 @@ client.setEndpoint(config.endpoint!).setProject(config.projectId!).setPlatform(c
 
 export const avatar = new Avatars(client)
 export const account = new Account(client)
-export const databases = new Databases(client)
+export const databases = new TablesDB(client)
 
 export async function login() {
     try {
@@ -82,6 +82,52 @@ export async function getCurrentUser() {
 
     } catch (error) {
         console.error(error)
-        return null
+        return []
+    }
+}
+
+export async function getLAtestProperties() {
+    try {
+        const result = await databases.listRows({
+            databaseId: config.databaseId!,
+            tableId: config.propertiesTableId!,
+            queries: [(Query.orderAsc('$createdAt')), Query.limit(5)]
+        })
+
+        return result.rows
+    } catch (error) {
+        console.error(error)
+        return []
+    }
+}
+
+export async function getProperties({ filter, query, limit }: { filter: string; query: string; limit?: number }) {
+    try {
+        const buildQuery = [Query.orderDesc('$createdAt')]
+
+        if (filter && filter !== 'All') {
+            buildQuery.push(Query.equal('type', filter))
+        }
+
+        if (query) {
+            Query.or([
+                Query.search('name', query),
+                Query.search('address', query),
+                Query.search('type', query)
+            ])
+        }
+
+        if (limit) buildQuery.push(Query.limit(limit))
+
+        const result = await databases.listRows({
+            databaseId: config.databaseId!,
+            tableId: config.propertiesTableId!,
+            queries: buildQuery
+        })
+
+        return result.rows
+    } catch (error) {
+        console.error(error)
+        return []
     }
 }
