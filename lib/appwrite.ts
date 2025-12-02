@@ -87,7 +87,7 @@ export async function getCurrentUser() {
     }
 }
 
-export async function getLAtestProperties() {
+export async function getLatestProperties() {
     try {
         const result = await tables.listRows({
             databaseId: config.databaseId!,
