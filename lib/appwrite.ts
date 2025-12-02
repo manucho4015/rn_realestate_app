@@ -132,3 +132,30 @@ export async function getProperties({ filter, query, limit }: { filter: string; 
         return []
     }
 }
+
+export async function getPropertyById({ id }: { id: string }) {
+    try {
+        const result = await tables.getRow({
+            databaseId: config.databaseId!,
+            tableId: config.propertiesTableId!,
+            rowId: id
+        })
+
+        const reviews = await tables.listRows({
+            databaseId: config.databaseId!,
+            tableId: config.reviewsTableId!,
+            queries: [Query.equal('property', id)]
+        })
+        const agent = await tables.getRow({
+            databaseId: config.databaseId!,
+            tableId: config.agentsTableId!,
+            rowId: result.agent
+        })
+
+        console.log(JSON.stringify(agent, null, 2))
+        return { ...result, reviews: reviews.rows, agent }
+    } catch (error) {
+        console.error(error)
+        return null
+    }
+}
